@@ -36,6 +36,12 @@ CONF_BRAVE_LONGITUDE = "brave_longitude"
 CONF_BRAVE_TIMEZONE = "brave_timezone"
 CONF_BRAVE_POST_CODE = "brave_post_code"
 
+# Google Custom Search constants
+
+CONF_GOOGLE_CSE_ENABLED = "google_cse_enabled"
+CONF_GOOGLE_CSE_API_KEY = "google_cse_api_key"
+CONF_GOOGLE_CSE_CX = "google_cse_cx"
+
 # Google Places-specific constants
 
 CONF_GOOGLE_PLACES_ENABLED = "google_places_enabled"
@@ -67,6 +73,8 @@ SERVICE_DEFAULTS = {
     CONF_BRAVE_TIMEZONE: "",
     CONF_BRAVE_COUNTRY_CODE: "",
     CONF_BRAVE_POST_CODE: "",
+    CONF_GOOGLE_CSE_API_KEY: "",
+    CONF_GOOGLE_CSE_CX: "",
     CONF_GOOGLE_PLACES_API_KEY: "",
     CONF_GOOGLE_PLACES_NUM_RESULTS: 2,
     CONF_GOOGLE_PLACES_LATITUDE: "",

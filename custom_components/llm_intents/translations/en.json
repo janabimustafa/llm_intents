@@ -6,9 +6,19 @@
         "description": "Select the services you want to enable for Tools for Assist.",
         "data": {
           "brave_search_enabled": "Enable Brave Web Search",
+          "google_cse_enabled": "Enable Google Custom Search",
           "google_places_enabled": "Enable Google Places",
           "wikipedia_enabled": "Enable Wikipedia Search",
           "weather_enabled": "Enable Weather Forecast"
+        }
+      },
+      "google_search": {
+        "title": "Configure Google Custom Search",
+        "description": "Configure Google Custom Search Engine settings.",
+        "data": {
+          "google_cse_api_key": "API Key",
+          "brave_num_results": "Number of Results",
+          "google_cse_cx": "Search Engine ID (cx)"
         }
       },
       "brave": {
@@ -54,6 +64,9 @@
     },
     "abort": {
       "single_instance_allowed": "Only one instance of Tools for Assist is allowed"
+    },
+    "error": {
+      "one_search_provider": "Please enable only one web search provider (Brave or Google Custom Search)."
     }
   },
   "options": {
@@ -71,6 +84,7 @@
         "description": "Select which services to enable or disable.\n\n{current_services}",
         "data": {
           "brave_search_enabled": "Enable Brave Web Search",
+          "google_cse_enabled": "Enable Google Custom Search",
           "google_places_enabled": "Enable Google Places",
           "wikipedia_enabled": "Enable Wikipedia Search"
         }
@@ -80,6 +94,15 @@
         "description": "Select which services to enable or disable.\n\n{current_services}",
         "data": {
           "weather_enabled": "Enable Weather Forecast"
+        }
+      },
+      "google_search": {
+        "title": "Configure Google Custom Search",
+        "description": "Configure Google Custom Search Engine settings.",
+        "data": {
+          "google_cse_api_key": "API Key",
+          "brave_num_results": "Number of Results",
+          "google_cse_cx": "Search Engine ID (cx)"
         }
       },
       "brave": {

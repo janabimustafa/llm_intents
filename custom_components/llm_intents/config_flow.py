@@ -24,6 +24,9 @@ from .const import (
     CONF_BRAVE_POST_CODE,
     CONF_BRAVE_TIMEZONE,
     CONF_DAILY_WEATHER_ENTITY,
+    CONF_GOOGLE_CSE_API_KEY,
+    CONF_GOOGLE_CSE_CX,
+    CONF_GOOGLE_CSE_ENABLED,
     CONF_GOOGLE_PLACES_API_KEY,
     CONF_GOOGLE_PLACES_ENABLED,
     CONF_GOOGLE_PLACES_LATITUDE,
@@ -46,6 +49,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 STEP_USER = "user"
 STEP_BRAVE = "brave"
+STEP_GOOGLE_SEARCH = "google_search"
 STEP_GOOGLE_PLACES = "google_places"
 STEP_WIKIPEDIA = "wikipedia"
 STEP_WEATHER = "weather"
@@ -58,6 +62,7 @@ def get_step_user_data_schema(hass) -> vol.Schema:
     """Generate a static schema for the main menu to select services."""
     schema = {
         vol.Optional(CONF_BRAVE_ENABLED, default=False): bool,
+        vol.Optional(CONF_GOOGLE_CSE_ENABLED, default=False): bool,
         vol.Optional(CONF_GOOGLE_PLACES_ENABLED, default=False): bool,
         vol.Optional(CONF_WIKIPEDIA_ENABLED, default=False): bool,
         vol.Optional(CONF_WEATHER_ENABLED, default=False): bool,
@@ -91,6 +96,26 @@ def get_brave_schema(hass) -> vol.Schema:
             ): str,
             vol.Optional(
                 CONF_BRAVE_POST_CODE, default=SERVICE_DEFAULTS.get(CONF_BRAVE_POST_CODE)
+            ): str,
+        }
+    )
+
+
+def get_google_search_schema(hass) -> vol.Schema:
+    """Return the static schema for Google Custom Search configuration."""
+    return vol.Schema(
+        {
+            vol.Required(
+                CONF_GOOGLE_CSE_API_KEY,
+                default=SERVICE_DEFAULTS.get(CONF_GOOGLE_CSE_API_KEY),
+            ): str,
+            vol.Required(
+                CONF_BRAVE_NUM_RESULTS,
+                default=SERVICE_DEFAULTS.get(CONF_BRAVE_NUM_RESULTS),
+            ): vol.All(int, vol.Range(min=1, max=10)),
+            vol.Required(
+                CONF_GOOGLE_CSE_CX,
+                default=SERVICE_DEFAULTS.get(CONF_GOOGLE_CSE_CX),
             ): str,
         }
     )
@@ -166,6 +191,7 @@ def get_weather_schema(hass) -> vol.Schema:
 SEARCH_STEP_ORDER = {
     STEP_USER: [None, get_step_user_data_schema],
     STEP_BRAVE: [CONF_BRAVE_ENABLED, get_brave_schema],
+    STEP_GOOGLE_SEARCH: [CONF_GOOGLE_CSE_ENABLED, get_google_search_schema],
     STEP_GOOGLE_PLACES: [CONF_GOOGLE_PLACES_ENABLED, get_google_places_schema],
     STEP_WIKIPEDIA: [CONF_WIKIPEDIA_ENABLED, get_wikipedia_schema],
 }
@@ -243,8 +269,19 @@ class LlmIntentsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="single_instance_allowed")
 
         if user_input is None:
-            # Display the main menu with checkboxes for Brave, Google Places, and Wikipedia
+            # Display the main menu with checkboxes for search, places, and Wikipedia
 
+            schema = get_step_user_data_schema(self.hass)
+            return self.async_show_form(
+                step_id=STEP_USER,
+                data_schema=schema,
+                errors=errors,
+            )
+        if (
+            user_input.get(CONF_BRAVE_ENABLED)
+            and user_input.get(CONF_GOOGLE_CSE_ENABLED)
+        ):
+            errors["base"] = "one_search_provider"
             schema = get_step_user_data_schema(self.hass)
             return self.async_show_form(
                 step_id=STEP_USER,
@@ -280,6 +317,12 @@ class LlmIntentsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> config_entries.FlowResult:
         """Handle Brave configuration step."""
         return await self.handle_step(STEP_BRAVE, user_input)
+
+    async def async_step_google_search(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.FlowResult:
+        """Handle Google Custom Search configuration step."""
+        return await self.handle_step(STEP_GOOGLE_SEARCH, user_input)
 
     async def async_step_google_places(
         self, user_input: dict[str, Any] | None = None
@@ -349,6 +392,10 @@ class LlmIntentsOptionsFlow(config_entries.OptionsFlowWithReload):
                     CONF_BRAVE_ENABLED, default=defaults.get(CONF_BRAVE_ENABLED, False)
                 ): bool,
                 vol.Optional(
+                    CONF_GOOGLE_CSE_ENABLED,
+                    default=defaults.get(CONF_GOOGLE_CSE_ENABLED, False),
+                ): bool,
+                vol.Optional(
                     CONF_GOOGLE_PLACES_ENABLED,
                     default=defaults.get(CONF_GOOGLE_PLACES_ENABLED, False),
                 ): bool,
@@ -367,6 +414,37 @@ class LlmIntentsOptionsFlow(config_entries.OptionsFlowWithReload):
             )
 
         # Store user selections and existing data
+        if (
+            user_input.get(CONF_BRAVE_ENABLED)
+            and user_input.get(CONF_GOOGLE_CSE_ENABLED)
+        ):
+            schema_dict = {
+                vol.Optional(
+                    CONF_BRAVE_ENABLED, default=defaults.get(CONF_BRAVE_ENABLED, False)
+                ): bool,
+                vol.Optional(
+                    CONF_GOOGLE_CSE_ENABLED,
+                    default=defaults.get(CONF_GOOGLE_CSE_ENABLED, False),
+                ): bool,
+                vol.Optional(
+                    CONF_GOOGLE_PLACES_ENABLED,
+                    default=defaults.get(CONF_GOOGLE_PLACES_ENABLED, False),
+                ): bool,
+                vol.Optional(
+                    CONF_WIKIPEDIA_ENABLED,
+                    default=defaults.get(CONF_WIKIPEDIA_ENABLED, False),
+                ): bool,
+            }
+            schema = vol.Schema(schema_dict)
+            return self.async_show_form(
+                step_id=STEP_CONFIGURE_SEARCH,
+                data_schema=schema,
+                errors={"base": "one_search_provider"},
+                description_placeholders={
+                    "current_services": self._get_current_services_description()
+                },
+            )
+
         self.user_selections = user_input.copy()
         self.config_data.update(user_input)
 
@@ -433,6 +511,8 @@ class LlmIntentsOptionsFlow(config_entries.OptionsFlowWithReload):
 
         if data.get(CONF_BRAVE_ENABLED):
             services.append("Brave Search")
+        if data.get(CONF_GOOGLE_CSE_ENABLED):
+            services.append("Google Custom Search")
         if data.get(CONF_GOOGLE_PLACES_ENABLED):
             services.append("Google Places")
         if data.get(CONF_WIKIPEDIA_ENABLED):
@@ -453,6 +533,7 @@ class LlmIntentsOptionsFlow(config_entries.OptionsFlowWithReload):
 
         next_step = get_next_step(current_step, self.user_selections, SEARCH_STEP_ORDER)
         opts = {**self.config_entry.data, **(self.config_entry.options or {})}
+        opts.update(self.config_data)
         if next_step:
             step_id, schema_func = next_step
             schema = schema_func(self.hass)
@@ -474,6 +555,12 @@ class LlmIntentsOptionsFlow(config_entries.OptionsFlowWithReload):
     ) -> config_entries.FlowResult:
         """Handle Brave configuration step in options flow."""
         return await self.handle_step(STEP_BRAVE, user_input)
+
+    async def async_step_google_search(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.FlowResult:
+        """Handle Google Custom Search configuration step in options flow."""
+        return await self.handle_step(STEP_GOOGLE_SEARCH, user_input)
 
     async def async_step_google_places(
         self, user_input: dict[str, Any] | None = None

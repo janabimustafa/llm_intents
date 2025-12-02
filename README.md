@@ -3,6 +3,7 @@
 Additional tools for LLM-backed Assist for Home Assistant:
 
 * **Brave Web Search**
+* **Google Custom Search (CSE)**
 * **Google Places**
 * **Wikipedia**
 * **Weather Forecast**
@@ -82,6 +83,32 @@ Uses the Brave Web Search API to return summarized, snippet-rich results.
 | `Longitude`         | ❌        | —       | Optional longitude for local result relevance (recommended) |
 | `Timezone`          | ❌        | —       | Optional TZ timezone identifier for local result relevance  |
 | `Post Code`         | ❌        | —       | Optional post code for local result relevance               |
+
+---
+
+### 🔎 Google Custom Search (CSE)
+
+Uses Google's Programmable Search Engine (Custom Search) as an alternative web search provider. Enable this instead of Brave if you prefer Google results.
+
+##### Requirements
+
+* A Google Cloud API key with access to the Custom Search JSON API.
+* A Programmable Search Engine ID (`cx`).
+* The free tier is supported within Google's query limits.
+
+#### Configuration Steps
+
+1. Select "Google Custom Search" during setup.
+2. Enter your Google API key and `cx` (Search Engine ID).
+3. Choose how many results (max 10) should be returned for each query.
+
+#### Options
+
+| Setting             | Required | Default | Description                                                      |
+|---------------------|----------|---------|------------------------------------------------------------------|
+| `API Key`           | ✅        | —       | Google API key with Custom Search JSON API enabled               |
+| `Search Engine ID`  | ✅        | —       | Programmable Search Engine ID (`cx`)                             |
+| `Number of Results` | ✅        | `2`     | Number of results to return (clamped to Google's limit of 10)    |
 
 ---
 

@@ -7,8 +7,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import llm
 
 from .BraveSearch import SearchWebTool
+from .GoogleSearch import GoogleSearchTool
 from .const import (
     CONF_BRAVE_ENABLED,
+    CONF_GOOGLE_CSE_ENABLED,
     CONF_GOOGLE_PLACES_ENABLED,
     CONF_WEATHER_ENABLED,
     CONF_WIKIPEDIA_ENABLED,
@@ -25,7 +27,6 @@ from .Wikipedia import SearchWikipediaTool
 _LOGGER = logging.getLogger(__name__)
 
 SEARCH_CONF_ENABLED_MAP = [
-    (CONF_BRAVE_ENABLED, SearchWebTool),
     (CONF_GOOGLE_PLACES_ENABLED, FindPlacesTool),
     (CONF_WIKIPEDIA_ENABLED, SearchWikipediaTool),
 ]
@@ -45,10 +46,14 @@ class BaseAPI(llm.API):
             hass=hass, id=id if id else name.lower().replace(" ", "_"), name=name
         )
 
-    def get_enabled_tools(self) -> list:
+    def _get_config_data(self) -> dict[str, Any]:
+        """Return merged config and options for this integration."""
         config_data = self.hass.data[DOMAIN].get("config", {})
         entry = next(iter(self.hass.config_entries.async_entries(DOMAIN)))
-        config_data = {**config_data, **entry.options}
+        return {**config_data, **entry.options}
+
+    def get_enabled_tools(self) -> list:
+        config_data = self._get_config_data()
         tools = []
 
         for key, tool_class in self._TOOLS_CONF_MAP:
@@ -79,6 +84,22 @@ class SearchAPI(BaseAPI):
     def __init__(self, hass: HomeAssistant, name: str) -> None:
         # Maintain compatibility with prior version
         super().__init__(hass=hass, id=DOMAIN, name=name)
+
+    def get_enabled_tools(self) -> list:
+        """Return enabled search tools, choosing a single web search provider."""
+        config_data = self._get_config_data()
+        tools = []
+
+        if config_data.get(CONF_GOOGLE_CSE_ENABLED):
+            tools.append(GoogleSearchTool())
+        elif config_data.get(CONF_BRAVE_ENABLED):
+            tools.append(SearchWebTool())
+
+        for key, tool_class in self._TOOLS_CONF_MAP:
+            if config_data.get(key):
+                tools.append(tool_class())
+
+        return tools
 
 
 class WeatherAPI(BaseAPI):

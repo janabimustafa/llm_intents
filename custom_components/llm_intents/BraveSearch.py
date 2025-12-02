@@ -52,6 +52,12 @@ class SearchWebTool(llm.Tool):
 
         return text
 
+    def _get_config(self, hass: HomeAssistant) -> dict:
+        """Merge stored config with runtime options."""
+        config_data = hass.data[DOMAIN].get("config", {})
+        entry = next(iter(hass.config_entries.async_entries(DOMAIN)))
+        return {**config_data, **entry.options}
+
     async def async_call(
         self,
         hass: HomeAssistant,
@@ -59,13 +65,11 @@ class SearchWebTool(llm.Tool):
         llm_context: llm.LLMContext,
     ) -> JsonObjectType:
         """Call the tool."""
-        config_data = hass.data[DOMAIN].get("config", {})
-        entry = next(iter(hass.config_entries.async_entries(DOMAIN)))
-        config_data = {**config_data, **entry.options}
-
+        config_data = self._get_config(hass)
         query = tool_input.tool_args["query"]
-        use_extra_snippets = True
         _LOGGER.info("Web search requested for: %s", query)
+
+        use_extra_snippets = True
 
         api_key = config_data.get(CONF_BRAVE_API_KEY)
         num_results = config_data.get(CONF_BRAVE_NUM_RESULTS, 2)
@@ -112,7 +116,7 @@ class SearchWebTool(llm.Tool):
                 headers["X-Loc-Postal-Code"] = str(post_code)
 
             cache = SQLiteCache()
-            cached_response = cache.get(__name__, params)
+            cached_response = cache.get("brave_search", params)
 
             if cached_response:
                 return self.wrap_response(cached_response)
@@ -148,12 +152,12 @@ class SearchWebTool(llm.Tool):
                     response = {"results": results if results else "No results found"}
 
                     if results:
-                        cache.set(__name__, params, response)
+                        cache.set("brave_search", params, response)
                         return self.wrap_response(response)
 
                     return response
                 _LOGGER.error(
-                    f"Web search received a HTTP {resp.status} error from Brave"
+                    "Web search received a HTTP %s error from Brave", resp.status
                 )
                 return {"error": f"Search error: {resp.status}"}
 
