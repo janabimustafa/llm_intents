@@ -435,6 +435,7 @@ class LlmIntentsOptionsFlow(config_entries.OptionsFlowWithReload):
                     default=defaults.get(CONF_WIKIPEDIA_ENABLED, False),
                 ): bool,
             }
+            
             schema = vol.Schema(schema_dict)
             return self.async_show_form(
                 step_id=STEP_CONFIGURE_SEARCH,
