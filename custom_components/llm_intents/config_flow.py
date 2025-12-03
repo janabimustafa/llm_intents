@@ -3,15 +3,12 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components.weather import WeatherEntityFeature
 from homeassistant.core import callback
-
-_LOGGER = logging.getLogger(__name__)
 
 from .const import (
     ADDON_NAME,
@@ -42,7 +39,11 @@ from .const import (
     SERVICE_DEFAULTS,
 )
 
+_LOGGER = logging.getLogger(__name__)
+
 if TYPE_CHECKING:  # pragma: no cover
+    from collections.abc import Callable
+
     from homeassistant.config_entries import ConfigEntry, OptionsFlow
 # Home Assistant best practice: Use constants for step ids
 
@@ -211,6 +212,7 @@ INITIAL_CONFIG_STEP_ORDER = {
 def get_next_step(
     current_step: str, config_data: dict, step_order: dict
 ) -> tuple[str, Callable] | None:
+    """Return the next config step to show based on enabled services."""
     keys = list(step_order.keys())
     try:
         start = keys.index(current_step) + 1
@@ -277,9 +279,8 @@ class LlmIntentsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 data_schema=schema,
                 errors=errors,
             )
-        if (
-            user_input.get(CONF_BRAVE_ENABLED)
-            and user_input.get(CONF_GOOGLE_CSE_ENABLED)
+        if user_input.get(CONF_BRAVE_ENABLED) and user_input.get(
+            CONF_GOOGLE_CSE_ENABLED
         ):
             errors["base"] = "one_search_provider"
             schema = get_step_user_data_schema(self.hass)
@@ -414,9 +415,8 @@ class LlmIntentsOptionsFlow(config_entries.OptionsFlowWithReload):
             )
 
         # Store user selections and existing data
-        if (
-            user_input.get(CONF_BRAVE_ENABLED)
-            and user_input.get(CONF_GOOGLE_CSE_ENABLED)
+        if user_input.get(CONF_BRAVE_ENABLED) and user_input.get(
+            CONF_GOOGLE_CSE_ENABLED
         ):
             schema_dict = {
                 vol.Optional(
@@ -435,7 +435,7 @@ class LlmIntentsOptionsFlow(config_entries.OptionsFlowWithReload):
                     default=defaults.get(CONF_WIKIPEDIA_ENABLED, False),
                 ): bool,
             }
-            
+
             schema = vol.Schema(schema_dict)
             return self.async_show_form(
                 step_id=STEP_CONFIGURE_SEARCH,

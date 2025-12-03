@@ -585,7 +585,7 @@ class TestLlmIntentsOptionsFlow:
 
         with patch.object(options_flow, "async_step_init") as mock_init:
             mock_init.return_value = {"type": FlowResultType.MENU}
-            result = await options_flow.async_step_delete(user_input)
+            await options_flow.async_step_delete(user_input)
             mock_init.assert_called_once()
 
     async def test_get_current_services_description_with_services(self, options_flow):
@@ -797,7 +797,7 @@ class TestConfigFlowBraveCreateEntry:
         with patch.object(config_flow, "async_create_entry") as mock_create_entry:
             mock_create_entry.return_value = {"type": FlowResultType.CREATE_ENTRY}
 
-            result = await config_flow.async_step_brave(user_input)
+            await config_flow.async_step_brave(user_input)
 
             # Should call create_entry without options parameter in some code paths
             assert mock_create_entry.called
@@ -1032,7 +1032,7 @@ class TestMockingAndPatching:
             await config_flow.async_step_user()
 
             mock_show_form.assert_called_once()
-            args, kwargs = mock_show_form.call_args
+            _args, kwargs = mock_show_form.call_args
             assert kwargs["step_id"] == STEP_USER
             assert "data_schema" in kwargs
 

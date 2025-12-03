@@ -7,7 +7,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import llm
 
 from .BraveSearch import SearchWebTool
-from .GoogleSearch import GoogleSearchTool
 from .const import (
     CONF_BRAVE_ENABLED,
     CONF_GOOGLE_CSE_ENABLED,
@@ -21,6 +20,7 @@ from .const import (
     WEATHER_SERVICES_PROMPT,
 )
 from .GooglePlaces import FindPlacesTool
+from .GoogleSearch import GoogleSearchTool
 from .Weather import WeatherForecastTool
 from .Wikipedia import SearchWikipediaTool
 

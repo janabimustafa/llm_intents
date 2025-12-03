@@ -104,9 +104,7 @@ class GoogleSearchTool(llm.Tool):
                         title = item.get("title", "")
                         snippet = item.get("snippet") or item.get("htmlSnippet", "")
                         cleaned_snippet = await self.cleanup_text(snippet)
-                        results.append(
-                            {"title": title, "description": cleaned_snippet}
-                        )
+                        results.append({"title": title, "description": cleaned_snippet})
 
                     response = {"results": results if results else "No results found"}
 

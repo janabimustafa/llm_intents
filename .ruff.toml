@@ -10,8 +10,18 @@ ignore = [
     "ARG004",
     "ANN101", # Missing type annotation for `self` in method
     "ANN401", # Dynamically typed expressions (typing.Any) are disallowed
+    "ANN002",
+    "ANN003",
+    "ANN202",
+    "ANN204",
+    "ANN205",
     "D203",   # no-blank-line-before-class (incompatible with formatter)
     "D212",   # multi-line-summary-first-line (incompatible with formatter)
+    "D100",
+    "D101",
+    "D102",
+    "D104",
+    "D107",
     "COM812", # incompatible with formatter
     "ISC001", # incompatible with formatter
 
@@ -35,6 +45,24 @@ ignore = [
     "PERF402",
     "S101",
     "ANN201",
+    "N999",
+    "RET504",
+    "TD002",
+    "TD003",
+    "FIX002",
+    "PLW2901",
+    "TRY400",
+    "FLY002",
+    "UP035",
+    "EM101",
+    "TRY002",
+    "TRY003",
+    "RUF005",
+    "G004",
+    "PLC0415",
+    "SLF001",
+    "TRY300",
+    "A002",
 ]
 
 [lint.flake8-pytest-style]

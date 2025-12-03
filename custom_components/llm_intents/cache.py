@@ -1,9 +1,9 @@
 import hashlib
 import json
 import logging
-import os
 import sqlite3
 import time
+from pathlib import Path
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -20,13 +20,13 @@ class SQLiteCache:
         return cls._instance
 
     def _init_db(self):
-        base_dir = os.path.dirname(os.path.abspath(__file__))  # this file’s directory
-        db_path = os.path.join(base_dir, "cache.db")
-        os.makedirs(base_dir, exist_ok=True)  # ensure folder exists
+        base_dir = Path(__file__).resolve().parent  # this file's directory
+        db_path = base_dir / "cache.db"
+        base_dir.mkdir(parents=True, exist_ok=True)  # ensure folder exists
 
-        if os.path.exists(db_path):
+        if db_path.exists():
             # Recreate cache file when addon is initialised
-            os.remove(db_path)
+            db_path.unlink()
 
         self._conn = sqlite3.connect(db_path)
         self._conn.execute("""
@@ -46,7 +46,7 @@ class SQLiteCache:
             else json.dumps(params, sort_keys=True, separators=(",", ":"))
         )
         combined = tool + params_str
-        return hashlib.md5(combined.encode()).hexdigest()
+        return hashlib.sha256(combined.encode()).hexdigest()
 
     def _cleanup(self):
         now = int(time.time())
